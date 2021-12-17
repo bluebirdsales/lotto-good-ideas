@@ -4,15 +4,23 @@ import { useState, useContext } from "react";
 import ListItem from "./ListItem";
 import Context from "./utils/context";
 
+
 const SimpleSlot = () => {
     const context = useContext(Context);
     const [selection, setSelection] = useState("");
     const [value, setValue] = useState("");
 
-    const handleAdd = (e) => {
+    const handleAdd = async (e) => {
         e.preventDefault();
-        context.handleAddIdea(value);
-        setValue("");
+
+        try {
+            
+            
+            context.handleAddIdea(value);
+            setValue("");
+        } catch (e) {
+            console.log(e);
+        }
     };
 
     const handleDelete = (index) => {
@@ -22,8 +30,6 @@ const SimpleSlot = () => {
     const handleChange = (e) => {
         setValue(e.target.value);
     };
-
-    console.log("context", context);
 
     return (
         <Box>
@@ -43,7 +49,7 @@ const SimpleSlot = () => {
             </Form>
             <List data={context.ideas} pad='none'>
                 {(datum, index) => (
-                    <ListItem item={datum} index={index} handleDelete={handleDelete} />
+                    <ListItem item={datum} key={`${datum}-${index}`} index={index} handleDelete={handleDelete} />
                 )}
             </List>
         </Box>

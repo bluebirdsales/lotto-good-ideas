@@ -1,34 +1,50 @@
-import React, { useReducer } from "react";
+import React from "react";
+import { useCustomReducer } from './utils/hooks';
 import Context from "./utils/context";
 import * as ACTIONS from "./store/actions/actions";
 import * as Reducer from "./store/reducers/reducer";
 import App from "./App";
 
+
+
 const ContextState = () => {
-  const [stateReducer, dispatchReducer] = useReducer(
-    Reducer.Reducer,
-    Reducer.initialState
-  );
+    const [stateReducer, dispatchReducer] = useCustomReducer(Reducer.Reducer, Reducer.initialState, true);
 
-  const handleAddIdea = (string) => {
-    dispatchReducer(ACTIONS.addIdea(string));
-  };
+    const handleAddIdea = (string) => {
+        dispatchReducer(ACTIONS.thunkedAddIdea(string));
+    };
 
-  const handleDeleteIdea = (number) => {
-    dispatchReducer(ACTIONS.deleteIdea(number));
-  };
+    const handleDeleteIdea = (number) => {
+        dispatchReducer(ACTIONS.thunkedDeleteIdea(number));
+    };
 
-  return (
-    <Context.Provider
-      value={{
-        ideas: stateReducer.ideas,
-        handleAddIdea: (string) => handleAddIdea(string),
-        handleDeleteIdea: (index) => handleDeleteIdea(index),
-      }}
-    >
-      <App />
-    </Context.Provider>
-  );
+    const handleSignIn = (user) => {
+        dispatchReducer(ACTIONS.thunkedSignIn(user));
+    };
+
+    const handleSignOutSuccess = () => {
+      dispatchReducer(ACTIONS.signOutSuccess());
+    }
+
+    const handleGoogleSignIn = () => {
+        dispatchReducer(ACTIONS.googleSignIn())
+    }
+
+    return (
+        <Context.Provider
+            value={{
+                ideas: stateReducer.ideas,
+                user: stateReducer.user,
+                handleAddIdea: (string) => handleAddIdea(string),
+                handleDeleteIdea: (index) => handleDeleteIdea(index),
+                handleSignIn: (user) => handleSignIn(user),
+                handleSignOutSuccess: () => handleSignOutSuccess(),
+                googleSignIn: () => handleGoogleSignIn(),
+            }}
+        >
+            <App />
+        </Context.Provider>
+    );
 };
 
 export default ContextState;
