@@ -10,7 +10,7 @@ function App() {
     const context = useContext(Context);
 
     const handleSpin = () => {
-        // spin logic here...
+        context.handleSpin();
     };
 
     const handleSignInSignOut = async () => {
@@ -68,7 +68,8 @@ function App() {
                     <Button primary label='spin' onClick={handleSpin} />
                 </Box>
                 <Box direction='row' fill='vertical' flex pad='medium'>
-                    <SimpleSlot />
+                    <SimpleSlot category={"category1"} message="start with" slots={1}/>
+                    <SimpleSlot category={"category2"} message="mix in" slots={2}/>
                 </Box>
             </Box>
         </Box>

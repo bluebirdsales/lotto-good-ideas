@@ -4,19 +4,16 @@ import { useState, useContext } from "react";
 import ListItem from "./ListItem";
 import Context from "./utils/context";
 
-
-const SimpleSlot = () => {
+const SimpleSlot = ({ category, message, slots }) => {
     const context = useContext(Context);
-    const [selection, setSelection] = useState("");
+    // const [selection, setSelection] = useState("");
     const [value, setValue] = useState("");
 
     const handleAdd = async (e) => {
         e.preventDefault();
 
         try {
-            
-            
-            context.handleAddIdea(value);
+            context.handleAddIdea(category, value);
             setValue("");
         } catch (e) {
             console.log(e);
@@ -24,7 +21,7 @@ const SimpleSlot = () => {
     };
 
     const handleDelete = (index) => {
-        context.handleDeleteIdea(index);
+        context.handleDeleteIdea(category, index);
     };
 
     const handleChange = (e) => {
@@ -32,24 +29,41 @@ const SimpleSlot = () => {
     };
 
     return (
-        <Box>
-            <Heading level='3'>start with</Heading>
-            <Heading level='5'>{selection}</Heading>
+        <Box margin={{ horizontal: "small" }}>
+            <Heading level='5'>{message}</Heading>
+            <Box height='xxsmall' direction='row' align='center' width='medium' margin={{vertical: "medium"}} justify='start'>
+                {context.selections[category].map((value, index) => (
+                    <Box direction='row' width='small'>
+                        <Heading key={`${value}-${index}`} level='4' margin={{ vertical: "none", horizontal: "small" }}>
+                            {value}
+                        </Heading>
+                    </Box>
+                ))}
+            </Box>
             <Form onSubmit={handleAdd}>
-                <Box direction='row'>
+                <Box direction='row' margin={{ vertical: "small" }} align='center'>
                     <TextInput
                         placeholder='drop an idea here...'
                         value={value}
                         onChange={handleChange}
                     />
-                    <Button onClick={handleAdd} disabled={value.length < 1} type='submit'>
-                        <AddCircle />
-                    </Button>
+                    <Button
+                        secondary
+                        onClick={handleAdd}
+                        disabled={value.length < 1}
+                        type='submit'
+                        icon={<AddCircle />}
+                    />
                 </Box>
             </Form>
-            <List data={context.ideas} pad='none'>
+            <List data={context.ideas[category].entries} pad='none'>
                 {(datum, index) => (
-                    <ListItem item={datum} key={`${datum}-${index}`} index={index} handleDelete={handleDelete} />
+                    <ListItem
+                        item={datum}
+                        key={`${datum}-${index}`}
+                        index={index}
+                        handleDelete={handleDelete}
+                    />
                 )}
             </List>
         </Box>

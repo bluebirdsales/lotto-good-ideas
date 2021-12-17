@@ -10,12 +10,12 @@ import App from "./App";
 const ContextState = () => {
     const [stateReducer, dispatchReducer] = useCustomReducer(Reducer.Reducer, Reducer.initialState, true);
 
-    const handleAddIdea = (string) => {
-        dispatchReducer(ACTIONS.thunkedAddIdea(string));
+    const handleAddIdea = (cat, val) => {
+        dispatchReducer(ACTIONS.thunkedAddIdea(cat, val));
     };
 
-    const handleDeleteIdea = (number) => {
-        dispatchReducer(ACTIONS.thunkedDeleteIdea(number));
+    const handleDeleteIdea = (cat, index) => {
+        dispatchReducer(ACTIONS.thunkedDeleteIdea(cat, index));
     };
 
     const handleSignIn = (user) => {
@@ -30,16 +30,22 @@ const ContextState = () => {
         dispatchReducer(ACTIONS.googleSignIn())
     }
 
+    const handleSpin = () => {
+        dispatchReducer(ACTIONS.thunkedSpin())
+    }
+
     return (
         <Context.Provider
             value={{
                 ideas: stateReducer.ideas,
                 user: stateReducer.user,
-                handleAddIdea: (string) => handleAddIdea(string),
-                handleDeleteIdea: (index) => handleDeleteIdea(index),
+                selections: stateReducer.selections,
+                handleAddIdea: (cat, val) => handleAddIdea(cat, val),
+                handleDeleteIdea: (cat, index) => handleDeleteIdea(cat, index),
                 handleSignIn: (user) => handleSignIn(user),
                 handleSignOutSuccess: () => handleSignOutSuccess(),
                 googleSignIn: () => handleGoogleSignIn(),
+                handleSpin: () => handleSpin(),
             }}
         >
             <App />
