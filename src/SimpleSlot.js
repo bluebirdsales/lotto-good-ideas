@@ -33,8 +33,8 @@ const SimpleSlot = ({ category, message, slots }) => {
             <Heading level='5'>{message}</Heading>
             <Box height='xxsmall' direction='row' align='center' width='medium' margin={{vertical: "medium"}} justify='start'>
                 {context.selections[category].map((value, index) => (
-                    <Box direction='row' width='small'>
-                        <Heading key={`${value}-${index}`} level='4' margin={{ vertical: "none", horizontal: "small" }}>
+                    <Box direction='row' width='small' key={`${value}-${index}`}>
+                        <Heading  level='4' margin={{ vertical: "none", horizontal: "small" }}>
                             {value}
                         </Heading>
                     </Box>

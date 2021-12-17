@@ -18,7 +18,7 @@ export function useCustomReducer(reducerFunction, initialState, enableLogger) {
         dispatch(action);
     }, []);
 
-    const customDispatch = enableLogger ? dispatchWithLogger : dispatch;
+    // const customDispatch = enableLogger ? dispatchWithLogger : dispatch;
 
     useMemo(
         function logStateAfterChange() {
@@ -40,5 +40,5 @@ export function useCustomReducer(reducerFunction, initialState, enableLogger) {
 
     prevState.current = { ...prevState.current, state };
 
-    return [state, customDispatch];
+    return [state, dispatchWithLogger];
 }

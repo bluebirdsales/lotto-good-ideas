@@ -5,10 +5,10 @@ import * as ACTIONS from "./store/actions/actions";
 import * as Reducer from "./store/reducers/reducer";
 import App from "./App";
 
-
+const useLogger = process.env.NODE_ENV === 'development';
 
 const ContextState = () => {
-    const [stateReducer, dispatchReducer] = useCustomReducer(Reducer.Reducer, Reducer.initialState, true);
+    const [stateReducer, dispatchReducer] = useCustomReducer(Reducer.Reducer, Reducer.initialState, useLogger);
 
     const handleAddIdea = (cat, val) => {
         dispatchReducer(ACTIONS.thunkedAddIdea(cat, val));

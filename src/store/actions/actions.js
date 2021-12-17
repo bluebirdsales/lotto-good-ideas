@@ -64,7 +64,6 @@ export const thunkedSignIn = (user) => async (dispatch) => {
                 },
             });
             const newDoc = await getDoc(docRef);
-            console.log("data", newDoc.data());
             dispatch(setStoredIdeas(newDoc.data().state.ideas));
         }
     } catch (e) {
@@ -74,7 +73,6 @@ export const thunkedSignIn = (user) => async (dispatch) => {
 
 export const googleSignIn = () => async (dispatch) => {
     const user = await signInWithGoogle();
-    console.log("user", user);
 
     dispatch(thunkedSignIn(user));
 };
