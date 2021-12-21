@@ -1,7 +1,7 @@
 import { Box, Button } from "grommet";
 import { Trash } from "grommet-icons";
 
-const ListItem = ({ index, item, handleDelete }) => {
+const IdeaListItem = ({ index, item, handleDelete }) => {
 
     return (
         <Box direction='row' align='center' justify='between' width='medium'>
@@ -11,4 +11,4 @@ const ListItem = ({ index, item, handleDelete }) => {
     );
 };
 
-export default ListItem;
+export default IdeaListItem;

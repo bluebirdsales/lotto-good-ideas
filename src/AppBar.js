@@ -6,9 +6,9 @@ const AppBar = (props) => (
         direction='row'
         align='center'
         justify='between'
-        background='light-2'
+        background='off-white'
         pad={{ vertical: "small", horizontal: "medium" }}
-        elevation='medium'
+        elevation='small'
         {...props}
     />
 );

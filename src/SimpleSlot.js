@@ -1,13 +1,16 @@
 import { TextInput, Box, Heading, Button, List, Form } from "grommet";
-import { AddCircle, Trash } from "grommet-icons";
+import { AddCircle, Lock } from "grommet-icons";
 import { useState, useContext } from "react";
-import ListItem from "./ListItem";
+import IdeaListItem from "./IdeaListItem";
 import Context from "./utils/context";
+import { IconButton } from "./common/buttons";
 
-const SimpleSlot = ({ category, message, slots }) => {
+const SimpleSlot = ({ category, message }) => {
     const context = useContext(Context);
     // const [selection, setSelection] = useState("");
     const [value, setValue] = useState("");
+
+    const { locked } = context.selections[category];
 
     const handleAdd = async (e) => {
         e.preventDefault();
@@ -28,13 +31,33 @@ const SimpleSlot = ({ category, message, slots }) => {
         setValue(e.target.value);
     };
 
+    const handleToggleLock = () => {
+        context.handleToggleLock(category);
+    }
+
     return (
         <Box margin={{ horizontal: "small" }}>
-            <Heading level='5'>{message}</Heading>
-            <Box height='xxsmall' direction='row' align='center' width='medium' margin={{vertical: "medium"}} justify='start'>
-                {context.selections[category].map((value, index) => (
+            <Box direction='row' align='center'>
+                <Heading level='5'>{message}</Heading>
+                <IconButton
+                    fill={false}
+                    backgroundColor={locked && "accent-1"}
+                    icon={<Lock size='small' color={locked && "dark-1"} />}
+                    size='small'
+                    onClick={handleToggleLock}
+                />
+            </Box>
+            <Box
+                height='xxsmall'
+                direction='row'
+                align='center'
+                width='medium'
+                margin={{ vertical: "medium" }}
+                justify='start'
+            >
+                {context.selections[category].results.map((value, index) => (
                     <Box direction='row' width='small' key={`${value}-${index}`}>
-                        <Heading  level='4' margin={{ vertical: "none", horizontal: "small" }}>
+                        <Heading level='4' margin={{ vertical: "none", horizontal: "small" }}>
                             {value}
                         </Heading>
                     </Box>
@@ -58,7 +81,7 @@ const SimpleSlot = ({ category, message, slots }) => {
             </Form>
             <List data={context.ideas[category].entries} pad='none'>
                 {(datum, index) => (
-                    <ListItem
+                    <IdeaListItem
                         item={datum}
                         key={`${datum}-${index}`}
                         index={index}

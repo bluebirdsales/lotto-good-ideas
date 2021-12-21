@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase/firebase_config";
 import { initialState } from "../reducers/reducer";
+import { v4 as uuidv4 } from "uuid";
 
 export const updateCategory = (category, entries) => ({
     type: TYPES.UPDATE_CATEGORY,
@@ -47,6 +48,33 @@ export const setSelections = (selections) => ({
     payload: selections,
 });
 
+export const setTextField = (string) => ({
+    type: TYPES.SET_TEXTFIELD,
+    payload: string,
+});
+
+export const handleClear = () => ({
+    type: TYPES.CLEAR_TEXTFIELD,
+});
+
+export const saveStart = () => ({
+    type: TYPES.SAVE_START,
+});
+
+export const saveSuccess = (savedIdeas) => ({
+    type: TYPES.SAVE_SUCCESS,
+    payload: savedIdeas,
+});
+
+export const saveFailure = () => ({
+    type: TYPES.SAVE_FAILURE,
+});
+
+export const toggleLockCategory = (category) => ({
+    type: TYPES.TOGGLE_LOCK_CATEGORY,
+    payload: category,
+});
+
 export const thunkedSignIn = (user) => async (dispatch) => {
     dispatch(signInSuccess(user));
 
@@ -56,6 +84,7 @@ export const thunkedSignIn = (user) => async (dispatch) => {
 
         if (docSnap.exists()) {
             dispatch(setStoredIdeas(docSnap.data().state.ideas));
+            dispatch(saveSuccess(docSnap.data().favorites));
         } else {
             await setDoc(doc(db, "users", user.uid), {
                 email: user.email,
@@ -73,7 +102,6 @@ export const thunkedSignIn = (user) => async (dispatch) => {
 
 export const googleSignIn = () => async (dispatch) => {
     const user = await signInWithGoogle();
-
     dispatch(thunkedSignIn(user));
 };
 
@@ -120,16 +148,72 @@ export const thunkedDeleteIdea = (category, index) => async (dispatch, getState)
 export const thunkedSpin = () => (dispatch, getState) => {
     const state = getState();
 
+    const prevSelections = state.selections;
+
     const randomlySelect = (array) => {
         return array[Math.floor(Math.random() * array.length)];
     };
-    const newState = {
-        category1: [randomlySelect(state.ideas.category1.entries)],
-        category2: [
-            randomlySelect(state.ideas.category2.entries),
-            randomlySelect(state.ideas.category2.entries),
-        ],
-    };
 
-    dispatch(setSelections(newState));
+    const newSelections = { ...prevSelections };
+
+    Object.keys(newSelections).forEach((category) => {
+        if (!state.selections[category].locked) {
+            const selects = [];
+            for (let i = 0; i < newSelections[category].results.length; i++) {
+                selects.push(randomlySelect(state.ideas[category].entries));
+            }
+            newSelections[category].results = selects;
+        }
+    });
+
+    dispatch(setSelections(newSelections));
+};
+
+export const thunkedSaveFavorite = () => async (dispatch, getState) => {
+    dispatch(saveStart());
+
+    const state = getState();
+
+    try {
+        const docRef = doc(db, `users/${state.user.uid}`);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            await updateDoc(docRef, {
+                [`favorites.${uuidv4()}`]: {
+                    idea: state.favorites.textField,
+                    rating: 0,
+                },
+            });
+            const updatedDocSnap = await getDoc(docRef);
+            dispatch(saveSuccess(updatedDocSnap.data().favorites));
+        }
+    } catch (e) {
+        console.log(e);
+    }
+};
+
+export const thunkedChangeRating = (id, newRating) => async (dispatch, getState) => {
+    const state = getState();
+
+    try {
+        const docRef = doc(db, `users/${state.user.uid}`);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            const { favorites } = docSnap.data();
+            const newFavorites = {
+                ...favorites,
+                [id]: {
+                    ...favorites[id],
+                    rating: newRating,
+                },
+            };
+            await updateDoc(docRef, {
+                favorites: newFavorites,
+            });
+            const updatedDocSnap = await getDoc(docRef);
+            dispatch(saveSuccess(updatedDocSnap.data().favorites));
+        }
+    } catch (e) {
+        console.log(e);
+    }
 };

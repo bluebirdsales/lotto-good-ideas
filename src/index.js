@@ -31,7 +31,13 @@ const theme = {
             size: "14px",
             height: "20px",
         },
+        button: {
+            default: {
+                color: "yellow"
+            }
+        }
     },
+    
 };
 
 ReactDOM.render(

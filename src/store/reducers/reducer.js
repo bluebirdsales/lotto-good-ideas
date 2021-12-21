@@ -12,8 +12,19 @@ export const initialState = {
         },
     },
     selections: {
-        category1: [""],
-        category2: ["", ""],
+        category1: {
+            locked: true,
+            results: [""],
+        },
+        category2: {
+            locked: false,
+            results: ["", ""],
+        },
+    },
+    favorites: {
+        textField: "",
+        saving: false,
+        savedIdeas: [],
     },
     user: null,
 };
@@ -56,6 +67,50 @@ export const Reducer = (state = initialState, action) => {
         case TYPES.SIGNOUT_SUCCESS:
             return {
                 ...initialState,
+            };
+        case TYPES.SET_TEXTFIELD:
+            return {
+                ...state,
+                favorites: {
+                    ...state.favorites,
+                    textField: action.payload,
+                },
+            };
+        case TYPES.CLEAR_TEXTFIELD:
+            return {
+                ...state,
+                favorites: {
+                    ...state.favorites,
+                    textField: "",
+                },
+            };
+        case TYPES.SAVE_START:
+            return {
+                ...state,
+                favorites: {
+                    ...state.favorites,
+                    saving: true,
+                },
+            };
+        case TYPES.SAVE_SUCCESS:
+            return {
+                ...state,
+                favorites: {
+                    savedIdeas: action.payload,
+                    saving: false,
+                    textField: "",
+                },
+            };
+        case TYPES.TOGGLE_LOCK_CATEGORY:
+            return {
+                ...state,
+                selections: {
+                    ...state.selections,
+                    [action.payload]: {
+                        ...state.selections[action.payload],
+                        locked: !state.selections[action.payload].locked,
+                    },
+                },
             };
         default:
             return state;
