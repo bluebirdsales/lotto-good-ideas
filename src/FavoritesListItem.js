@@ -1,21 +1,27 @@
-import { useContext, useState } from "react";
-import { Box, Text } from "grommet";
+import { useContext } from "react";
+import { Box, Button, Text } from "grommet";
 import StarRatings from "react-star-ratings";
 import { ThemeContext } from "grommet";
 import { hexToRGBA } from "./utils/functions";
 import Context from "./utils/context";
+import { Down } from 'grommet-icons';
+import { IconButton } from './common/buttons';
 
 const FavoritesListItem = ({ item, itemId }) => {
     const theme = useContext(ThemeContext);
     const context = useContext(Context);
 
     const handleChangeRating = (newRating, name) => {
-        context.handleChangeRating(itemId, newRating)
+        context.handleChangeRating(itemId, newRating);
     };
 
     return (
         <Box fill direction='row' align='center' justify='between' width='medium'>
-            <Text size='medium'>{item.idea}</Text>
+            <Box direction='row' align='center'>
+                <IconButton icon={<Down size='small'/>}/>
+                <Text size='medium'>{item.idea}</Text>
+                
+            </Box>
             <StarRatings
                 rating={item.rating}
                 starRatedColor={theme.global.colors["accent-1"]}

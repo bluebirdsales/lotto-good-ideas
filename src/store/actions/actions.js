@@ -91,6 +91,7 @@ export const thunkedSignIn = (user) => async (dispatch) => {
                 state: {
                     ideas: initialState.ideas,
                 },
+                favorites: initialState.favorites.savedIdeas,
             });
             const newDoc = await getDoc(docRef);
             dispatch(setStoredIdeas(newDoc.data().state.ideas));

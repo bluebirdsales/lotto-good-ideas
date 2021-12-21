@@ -1,4 +1,5 @@
 import * as TYPES from "../actions/types";
+import { v4 as uuidv4 } from "uuid";
 
 export const initialState = {
     ideas: {
@@ -13,7 +14,7 @@ export const initialState = {
     },
     selections: {
         category1: {
-            locked: true,
+            locked: false,
             results: [""],
         },
         category2: {
@@ -24,7 +25,12 @@ export const initialState = {
     favorites: {
         textField: "",
         saving: false,
-        savedIdeas: [],
+        savedIdeas: {
+            "da67d2f1-adeb-4b6d-8bdb-71d022691749": {
+                idea: "a pretty good idea...",
+                rating: 4,
+            },
+        },
     },
     user: null,
 };
