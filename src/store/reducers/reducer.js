@@ -1,5 +1,4 @@
 import * as TYPES from "../actions/types";
-import { v4 as uuidv4 } from "uuid";
 
 export const initialState = {
     ideas: {
@@ -29,6 +28,12 @@ export const initialState = {
             "da67d2f1-adeb-4b6d-8bdb-71d022691749": {
                 idea: "a pretty good idea...",
                 rating: 4,
+                category1: [""],
+                category2: ["",""],
+                created: {
+                    nanoseconds: 0,
+                    seconds: 1640199289,
+                }
             },
         },
     },
@@ -48,13 +53,6 @@ export const Reducer = (state = initialState, action) => {
                     },
                 },
             };
-        // case TYPES.DELETE_IDEA:
-        //     const clonedIdeas = [...state.ideas];
-        //     clonedIdeas.splice(action.payload, 1);
-        //     return {
-        //         ...state,
-        //         ideas: [...clonedIdeas],
-        //     };
         case TYPES.SET_STORED_IDEAS:
             return {
                 ...state,

@@ -1,15 +1,6 @@
 import * as TYPES from "./types";
 import { signInWithGoogle } from "../../firebase/firebase_config";
-import {
-    getDoc,
-    doc,
-    updateDoc,
-    arrayUnion,
-    arrayRemove,
-    setDoc,
-    addDoc,
-    collection,
-} from "firebase/firestore";
+import { getDoc, doc, updateDoc, setDoc, Timestamp } from "firebase/firestore";
 import { db } from "../../firebase/firebase_config";
 import { initialState } from "../reducers/reducer";
 import { v4 as uuidv4 } from "uuid";
@@ -183,6 +174,9 @@ export const thunkedSaveFavorite = () => async (dispatch, getState) => {
                 [`favorites.${uuidv4()}`]: {
                     idea: state.favorites.textField,
                     rating: 0,
+                    category1: state.selections.category1.results,
+                    category2: state.selections.category2.results,
+                    created: Timestamp.now()
                 },
             });
             const updatedDocSnap = await getDoc(docRef);
