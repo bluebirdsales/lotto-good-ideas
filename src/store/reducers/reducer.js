@@ -13,7 +13,7 @@ export const initialState = {
     },
     selections: {
         category1: [{ locked: false, result: "" }],
-        category2: [{ locked: false, result: "" }, { locked: true, result: "" }],
+        category2: [{ locked: false, result: "" }, { locked: false, result: "" }],
     },
     favorites: {
         textField: "",
