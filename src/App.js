@@ -78,11 +78,11 @@ function App() {
             <Box fill justify='between' direction='row' pad={{horizontal: 'small'}}>
                 {
                     tabIndex > 0 ?
-                    <IconButton plain icon={<Previous />} onClick={handleClickPrev} /> : <Box />
+                    <IconButton plain icon={<Previous />} onClick={handleClickPrev} margin='8px'/> : <Box />
                 }
                 {
                     tabIndex < 1 ?
-                    <IconButton plain icon={<Next />} onClick ={handleClickNext} /> : <Box/>
+                    <IconButton plain icon={<Next />} onClick ={handleClickNext} margin='8px'/> : <Box/>
                 }
             </Box>
             <SwipeableViews enableMouseEvents index={tabIndex} onChangeIndex={handleChangeIndex} >

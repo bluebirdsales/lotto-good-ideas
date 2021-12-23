@@ -12,14 +12,8 @@ export const initialState = {
         },
     },
     selections: {
-        category1: {
-            locked: false,
-            results: [""],
-        },
-        category2: {
-            locked: false,
-            results: ["", ""],
-        },
+        category1: [{ locked: false, result: "" }],
+        category2: [{ locked: false, result: "" }, { locked: true, result: "" }],
     },
     favorites: {
         textField: "",
@@ -29,11 +23,11 @@ export const initialState = {
                 idea: "a pretty good idea...",
                 rating: 4,
                 category1: [""],
-                category2: ["",""],
+                category2: ["", ""],
                 created: {
                     nanoseconds: 0,
                     seconds: 1640199289,
-                }
+                },
             },
         },
     },
@@ -106,16 +100,10 @@ export const Reducer = (state = initialState, action) => {
                 },
             };
         case TYPES.TOGGLE_LOCK_CATEGORY:
-            return {
-                ...state,
-                selections: {
-                    ...state.selections,
-                    [action.payload]: {
-                        ...state.selections[action.payload],
-                        locked: !state.selections[action.payload].locked,
-                    },
-                },
-            };
+            const { category, index } = action.payload;
+            const clonedState = {...state};
+            clonedState.selections[category][index].locked = !clonedState.selections[category][index].locked
+            return clonedState;
         default:
             return state;
     }

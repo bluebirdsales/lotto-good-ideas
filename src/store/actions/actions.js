@@ -61,9 +61,9 @@ export const saveFailure = () => ({
     type: TYPES.SAVE_FAILURE,
 });
 
-export const toggleLockCategory = (category) => ({
+export const toggleLockCategory = (category, index) => ({
     type: TYPES.TOGGLE_LOCK_CATEGORY,
-    payload: category,
+    payload: { category, index },
 });
 
 export const thunkedSignIn = (user) => async (dispatch) => {
@@ -139,6 +139,7 @@ export const thunkedDeleteIdea = (category, index) => async (dispatch, getState)
 
 export const thunkedSpin = () => (dispatch, getState) => {
     const state = getState();
+    const { selections } = state;
 
     const prevSelections = state.selections;
 
@@ -149,13 +150,11 @@ export const thunkedSpin = () => (dispatch, getState) => {
     const newSelections = { ...prevSelections };
 
     Object.keys(newSelections).forEach((category) => {
-        if (!state.selections[category].locked) {
-            const selects = [];
-            for (let i = 0; i < newSelections[category].results.length; i++) {
-                selects.push(randomlySelect(state.ideas[category].entries));
+        selections[category].forEach((el, index) => {
+            if (!el.locked) {
+                newSelections[category][index].result = randomlySelect(state.ideas[category].entries)
             }
-            newSelections[category].results = selects;
-        }
+        });
     });
 
     dispatch(setSelections(newSelections));
@@ -170,15 +169,17 @@ export const thunkedSaveFavorite = () => async (dispatch, getState) => {
         const docRef = doc(db, `users/${state.user.uid}`);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-            await updateDoc(docRef, {
+            const newFavorite = {
                 [`favorites.${uuidv4()}`]: {
                     idea: state.favorites.textField,
                     rating: 0,
-                    category1: state.selections.category1.results,
-                    category2: state.selections.category2.results,
-                    created: Timestamp.now()
+                    category1: [state.selections.category1[0].result],
+                    category2: [state.selections.category2[0].result, state.selections.category2[1].result],
+                    created: Timestamp.now(),
                 },
-            });
+            }
+            console.log('new', newFavorite)
+            await updateDoc(docRef, newFavorite);
             const updatedDocSnap = await getDoc(docRef);
             dispatch(saveSuccess(updatedDocSnap.data().favorites));
         }

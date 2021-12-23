@@ -10,7 +10,7 @@ const SimpleSlot = ({ category, message }) => {
     // const [selection, setSelection] = useState("");
     const [value, setValue] = useState("");
 
-    const { locked } = context.selections[category];
+    // const { locked } = context.selections[category];
 
     const handleAdd = async (e) => {
         e.preventDefault();
@@ -31,21 +31,14 @@ const SimpleSlot = ({ category, message }) => {
         setValue(e.target.value);
     };
 
-    const handleToggleLock = () => {
-        context.handleToggleLock(category);
-    }
+    const handleToggleLock = (index) => {
+        context.handleToggleLock(category, index);
+    };
 
     return (
         <Box margin={{ horizontal: "small" }}>
             <Box direction='row' align='center'>
                 <Heading level='5'>{message}</Heading>
-                <IconButton
-                    fill={false}
-                    backgroundColor={locked && "accent-1"}
-                    icon={<Lock size='small' color={locked && "dark-1"} />}
-                    size='small'
-                    onClick={handleToggleLock}
-                />
             </Box>
             <Box
                 height='xxsmall'
@@ -55,10 +48,18 @@ const SimpleSlot = ({ category, message }) => {
                 margin={{ vertical: "medium" }}
                 justify='start'
             >
-                {context.selections[category].results.map((value, index) => (
-                    <Box direction='row' width='small' key={`${value}-${index}`}>
-                        <Heading level='4' margin={{ vertical: "none", horizontal: "small" }}>
-                            {value}
+                {context.selections[category].map((el, index) => (
+                    <Box direction='row' width='small' key={`${el.result}-${index}`} align='center'>
+                        <IconButton
+                            fill={false}
+                            backgroundColor={el.locked && "accent-1"}
+                            icon={<Lock size='small' color={el.locked && "dark-1"} />}
+                            size='small'
+                            onClick={() => handleToggleLock(index)}
+                            margin='none'
+                        />
+                        <Heading level='4' margin={{ vertical: "none", horizontal: "xsmall" }}>
+                            {el.result}
                         </Heading>
                     </Box>
                 ))}

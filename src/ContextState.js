@@ -50,8 +50,8 @@ const ContextState = () => {
         dispatchReducer(ACTIONS.handleClear());
     };
 
-    const handleToggleLock = (category) => {
-        dispatchReducer(ACTIONS.toggleLockCategory(category));
+    const handleToggleLock = (category, index) => {
+        dispatchReducer(ACTIONS.toggleLockCategory(category, index));
     };
 
     const handleChangeRating = (id, rating) => {
@@ -74,7 +74,7 @@ const ContextState = () => {
                 handleSave: () => handleSave(),
                 handleTextFieldChange: (string) => handleTextFieldChange(string),
                 handleClear: () => handleClear(),
-                handleToggleLock: (category) => handleToggleLock(category),
+                handleToggleLock: (category, index) => handleToggleLock(category, index),
                 handleChangeRating: (id, rating) => handleChangeRating(id, rating),
             }}
         >
