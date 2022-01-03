@@ -7,9 +7,8 @@ import Context from "./utils/context";
 
 const FavoritesTab = () => {
     const context = useContext(Context);
-
+    const { activeIds } = context.session;
     const [activePanels, setActivePanels] = useState([]);
-    const [activeIds, setActiveIds] = useState([]);
 
     const { savedIdeas } = context.favorites;
 
@@ -32,32 +31,25 @@ const FavoritesTab = () => {
     const handleActivePanels = (array) => {
         //get ids of active indices from sortedFavorites
         const ids = array.map((activeIndex) => sortedFaves[activeIndex]);
-        setActiveIds(ids);
-        window.localStorage.setItem("activeIds", JSON.stringify(ids));
+
+        context.handleSetActiveIds(ids);
 
         //setActivePanels with array of indices of active Ids
-        setActivePanelsById(ids);
+        setActivePanels(getPanelsById(ids));
     };
 
-    const setActivePanelsById = useCallback(
-        (ids) => {
-            const panels = ids.reduce((acc, id) => {
-                const index = sortedFaves.indexOf(id);
-                if (index >= 0) acc.push(index);
-                return acc;
-            }, []);
-            setActivePanels(panels);
-        },
-        [sortedFaves]
-    );
+    const getPanelsById = useCallback((ids) => {
+        const panels = ids.reduce((acc, id) => {
+            const index = sortedFaves.indexOf(id);
+            if (index >= 0) acc.push(index);
+            return acc;
+        }, []);
+        return panels;
+    }, [sortedFaves]);
 
     useEffect(() => {
-        const ids = JSON.parse(window.localStorage.getItem("activeIds"));
-        if (ids) {
-            setActivePanelsById(ids);
-            setActiveIds(ids);
-        }
-    }, [setActivePanelsById]);
+        setActivePanels(getPanelsById(activeIds))
+    }, [activeIds, getPanelsById])
 
     return (
         <Box

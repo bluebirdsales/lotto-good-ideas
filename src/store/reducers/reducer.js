@@ -13,7 +13,10 @@ export const initialState = {
     },
     selections: {
         category1: [{ locked: false, result: "" }],
-        category2: [{ locked: false, result: "" }, { locked: false, result: "" }],
+        category2: [
+            { locked: false, result: "" },
+            { locked: false, result: "" },
+        ],
     },
     favorites: {
         textField: "",
@@ -31,6 +34,9 @@ export const initialState = {
                 },
             },
         },
+    },
+    session: {
+        activeIds: [],
     },
     user: null,
 };
@@ -107,7 +113,7 @@ export const Reducer = (state = initialState, action) => {
                 favorites: {
                     ...state.favorites,
                     deleting: true,
-                }
+                },
             };
         case TYPES.DELETE_FAVORITE_FAILURE:
             return {
@@ -115,13 +121,27 @@ export const Reducer = (state = initialState, action) => {
                 favorites: {
                     ...state.favorites,
                     deleting: false,
-                }
+                },
             };
         case TYPES.TOGGLE_LOCK_CATEGORY:
             const { category, index } = action.payload;
-            const clonedState = {...state};
-            clonedState.selections[category][index].locked = !clonedState.selections[category][index].locked
+            const clonedState = { ...state };
+            clonedState.selections[category][index].locked =
+                !clonedState.selections[category][index].locked;
             return clonedState;
+        case TYPES.SET_SESSION:
+            return {
+                ...state,
+                session: action.payload,
+            };
+        case TYPES.SET_ACTIVE_IDS:
+            return {
+                ...state,
+                session: {
+                    ...state.session,
+                    activeIds: action.payload,
+                },
+            };
         default:
             return state;
     }

@@ -56,11 +56,15 @@ const ContextState = () => {
 
     const handleChangeRating = (id, rating) => {
         dispatchReducer(ACTIONS.thunkedChangeRating(id, rating));
-    }
+    };
 
     const handleDeleteFavorite = (id) => {
-        dispatchReducer(ACTIONS.thunkedDeleteFavorite(id))
-    }
+        dispatchReducer(ACTIONS.thunkedDeleteFavorite(id));
+    };
+
+    const handleSetActiveIds = (ids) => {
+        dispatchReducer(ACTIONS.thunkedSetActiveIds(ids));
+    };
 
     return (
         <Context.Provider
@@ -69,6 +73,7 @@ const ContextState = () => {
                 user: stateReducer.user,
                 selections: stateReducer.selections,
                 favorites: stateReducer.favorites,
+                session: stateReducer.session,
                 handleAddIdea: (cat, val) => handleAddIdea(cat, val),
                 handleDeleteIdea: (cat, index) => handleDeleteIdea(cat, index),
                 handleSignIn: (user) => handleSignIn(user),
@@ -81,6 +86,7 @@ const ContextState = () => {
                 handleToggleLock: (category, index) => handleToggleLock(category, index),
                 handleChangeRating: (id, rating) => handleChangeRating(id, rating),
                 handleDeleteFavorite: (id) => handleDeleteFavorite(id),
+                handleSetActiveIds: (ids) => handleSetActiveIds(ids),
             }}
         >
             <App />

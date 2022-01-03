@@ -66,7 +66,18 @@ export const toggleLockCategory = (category, index) => ({
     payload: { category, index },
 });
 
+export const setSession = (session) => ({
+    type: TYPES.SET_SESSION,
+    payload: session,
+});
+
+export const setActiveIds = (ids) => ({
+    type: TYPES.SET_ACTIVE_IDS,
+    payload: ids,
+});
+
 export const thunkedSignIn = (user) => async (dispatch) => {
+    console.log("user", user);
     dispatch(signInSuccess(user));
 
     try {
@@ -74,8 +85,10 @@ export const thunkedSignIn = (user) => async (dispatch) => {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-            dispatch(setStoredIdeas(docSnap.data().state.ideas));
-            dispatch(saveSuccess(docSnap.data().favorites));
+            const { favorites, state, session } = docSnap.data();
+            dispatch(setStoredIdeas(state.ideas));
+            dispatch(saveSuccess(favorites));
+            dispatch(setSession(session));
         } else {
             await setDoc(doc(db, "users", user.uid), {
                 email: user.email,
@@ -83,6 +96,7 @@ export const thunkedSignIn = (user) => async (dispatch) => {
                     ideas: initialState.ideas,
                 },
                 favorites: initialState.favorites.savedIdeas,
+                session: initialState.session,
             });
             const newDoc = await getDoc(docRef);
             dispatch(setStoredIdeas(newDoc.data().state.ideas));
@@ -162,6 +176,27 @@ export const thunkedSpin = () => (dispatch, getState) => {
     dispatch(setSelections(newSelections));
 };
 
+export const thunkedSetActiveIds = (ids) => async (dispatch, getState) => {
+    //update local state first, later undo change if request fails
+    const state = getState();
+    dispatch(setActiveIds(ids));
+
+    try {
+        const docRef = doc(db, `users/${state.user.uid}`);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            const activeIds = {
+                "session.activeIds": ids
+            }
+            await updateDoc(docRef, activeIds);
+        }
+    } catch (e) {
+        //restore activeIds on failed request
+        dispatch(setActiveIds(state.session.activeIds));
+    }
+};
+
 export const thunkedSaveFavorite = () => async (dispatch, getState) => {
     dispatch(saveStart());
 
@@ -183,7 +218,6 @@ export const thunkedSaveFavorite = () => async (dispatch, getState) => {
                     created: Timestamp.now(),
                 },
             };
-            console.log("new", newFavorite);
             await updateDoc(docRef, newFavorite);
             const updatedDocSnap = await getDoc(docRef);
             dispatch(saveSuccess(updatedDocSnap.data().favorites));
@@ -213,11 +247,11 @@ export const thunkedDeleteFavorite = (id) => async (dispatch, getState) => {
             dispatch(saveSuccess(updatedDocSnap.data().favorites));
 
             //cleanup activeIds in localStorage
-            const activeIds = JSON.parse(window.localStorage.getItem('activeIds'));
-            const idIndex = activeIds.indexOf(id)
+            const activeIds = JSON.parse(window.localStorage.getItem("activeIds"));
+            const idIndex = activeIds.indexOf(id);
             if (idIndex >= 0) {
-                activeIds.splice(idIndex, 1)
-                window.localStorage.setItem('activeIds', JSON.stringify(activeIds))
+                activeIds.splice(idIndex, 1);
+                window.localStorage.setItem("activeIds", JSON.stringify(activeIds));
             }
         }
     } catch (e) {
