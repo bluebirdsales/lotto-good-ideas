@@ -19,11 +19,15 @@ const FavoritesTab = () => {
     //     return textA < textB ? -1 : textA > textB ? 1 : 0;
     // });
 
-    const sortedFaves = useMemo(() => Object.keys(savedIdeas).sort((a, b) => {
-        const ratingA = savedIdeas[a].rating;
-        const ratingB = savedIdeas[b].rating;
-        return ratingB - ratingA;
-    }), [savedIdeas]);
+    const sortedFaves = useMemo(
+        () =>
+            Object.keys(savedIdeas).sort((a, b) => {
+                const ratingA = savedIdeas[a].rating;
+                const ratingB = savedIdeas[b].rating;
+                return ratingB - ratingA;
+            }),
+        [savedIdeas]
+    );
 
     const handleActivePanels = (array) => {
         //get ids of active indices from sortedFavorites
@@ -35,19 +39,24 @@ const FavoritesTab = () => {
         setActivePanelsById(ids);
     };
 
-    const setActivePanelsById = useCallback((ids) => {
-        const panels = ids.reduce((acc, id) => {
-            const index = sortedFaves.indexOf(id);
-            if (index >= 0) acc.push(index);
-            return acc;
-        }, []);
-        setActivePanels(panels);
-    }, [sortedFaves]);
+    const setActivePanelsById = useCallback(
+        (ids) => {
+            const panels = ids.reduce((acc, id) => {
+                const index = sortedFaves.indexOf(id);
+                if (index >= 0) acc.push(index);
+                return acc;
+            }, []);
+            setActivePanels(panels);
+        },
+        [sortedFaves]
+    );
 
     useEffect(() => {
-        const ids = JSON.parse(window.localStorage.getItem("activeIds"))
-        setActivePanelsById(ids);
-        setActiveIds(ids)
+        const ids = JSON.parse(window.localStorage.getItem("activeIds"));
+        if (ids) {
+            setActivePanelsById(ids);
+            setActiveIds(ids);
+        }
     }, [setActivePanelsById]);
 
     return (
