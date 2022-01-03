@@ -18,6 +18,7 @@ export const initialState = {
     favorites: {
         textField: "",
         saving: false,
+        deleting: false,
         savedIdeas: {
             "da67d2f1-adeb-4b6d-8bdb-71d022691749": {
                 idea: "a pretty good idea...",
@@ -97,7 +98,24 @@ export const Reducer = (state = initialState, action) => {
                     savedIdeas: action.payload,
                     saving: false,
                     textField: "",
+                    deleting: false,
                 },
+            };
+        case TYPES.DELETE_FAVORITE_START:
+            return {
+                ...state,
+                favorites: {
+                    ...state.favorites,
+                    deleting: true,
+                }
+            };
+        case TYPES.DELETE_FAVORITE_FAILURE:
+            return {
+                ...state,
+                favorites: {
+                    ...state.favorites,
+                    deleting: false,
+                }
             };
         case TYPES.TOGGLE_LOCK_CATEGORY:
             const { category, index } = action.payload;

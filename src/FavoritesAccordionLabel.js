@@ -3,10 +3,10 @@ import StarRatings from "react-star-ratings";
 import { hexToRGBA } from "./utils/functions";
 import { useContext } from "react";
 
-const FavoritesAccordionLabel = ({ item, itemId, handleChangeRating }) => {
+const FavoritesAccordionLabel = ({ hovering, item, itemId, handleChangeRating }) => {
     const theme = useContext(ThemeContext);
     return (
-        <Box fill direction='row' align='center' justify='between'>
+        <Box fill direction='row' align='center' justify='between' background={hovering ? hexToRGBA(theme.global.colors["light-1"], 0.05) : 'none'}>
             <Heading level='4'>{item.idea}</Heading>
             <StarRatings
                 rating={item.rating}

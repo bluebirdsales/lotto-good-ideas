@@ -1,7 +1,7 @@
 import { Accordion, Box, Button, Heading } from "grommet";
 import { IconButton } from "./common/buttons";
 import { Descend, Star } from "grommet-icons";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useMemo, useCallback } from "react";
 import FavoritesListItem from "./FavoritesListItem";
 import Context from "./utils/context";
 
@@ -9,6 +9,7 @@ const FavoritesTab = () => {
     const context = useContext(Context);
 
     const [activePanels, setActivePanels] = useState([]);
+    const [activeIds, setActiveIds] = useState([]);
 
     const { savedIdeas } = context.favorites;
 
@@ -18,20 +19,36 @@ const FavoritesTab = () => {
     //     return textA < textB ? -1 : textA > textB ? 1 : 0;
     // });
 
-    const sortedFaves = Object.keys(savedIdeas).sort((a, b) => {
+    const sortedFaves = useMemo(() => Object.keys(savedIdeas).sort((a, b) => {
         const ratingA = savedIdeas[a].rating;
         const ratingB = savedIdeas[b].rating;
         return ratingB - ratingA;
-    });
+    }), [savedIdeas]);
 
     const handleActivePanels = (array) => {
-        setActivePanels(array);
-        window.localStorage.setItem("activePanels", JSON.stringify(array));
+        //get ids of active indices from sortedFavorites
+        const ids = array.map((activeIndex) => sortedFaves[activeIndex]);
+        setActiveIds(ids);
+        window.localStorage.setItem("activeIds", JSON.stringify(ids));
+
+        //setActivePanels with array of indices of active Ids
+        setActivePanelsById(ids);
     };
 
+    const setActivePanelsById = useCallback((ids) => {
+        const panels = ids.reduce((acc, id) => {
+            const index = sortedFaves.indexOf(id);
+            if (index >= 0) acc.push(index);
+            return acc;
+        }, []);
+        setActivePanels(panels);
+    }, [sortedFaves]);
+
     useEffect(() => {
-        setActivePanels(JSON.parse(window.localStorage.getItem("activePanels")));
-    }, []);
+        const ids = JSON.parse(window.localStorage.getItem("activeIds"))
+        setActivePanelsById(ids);
+        setActiveIds(ids)
+    }, [setActivePanelsById]);
 
     return (
         <Box

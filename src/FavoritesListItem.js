@@ -1,18 +1,35 @@
 import { useContext, useState } from "react";
-import { AccordionPanel, Box, Text } from "grommet";
+import { AccordionPanel, Box, DropButton, Spinner, Text } from "grommet";
 
 import Context from "./utils/context";
 import FavoritesAccordionLabel from "./FavoritesAccordionLabel";
-import dayjs from 'dayjs';
+import dayjs from "dayjs";
+import { Trash } from "grommet-icons";
+import DeleteDialog from "./DeleteDialog";
 
 const FavoritesListItem = ({ item, itemId }) => {
     const context = useContext(Context);
+    const [hovering, setHovering] = useState(false);
+
+    const { saving } = context.favorites;
 
     const handleChangeRating = (newRating, name, e) => {
         e.stopPropagation();
         context.handleChangeRating(itemId, newRating);
-        console.log(name);
     };
+
+    const handleDelete = () => {
+        if (context.favorites.saving) return;
+        context.handleDeleteFavorite(itemId);
+    };
+
+    const handleHover = () => {
+        setHovering(true);
+    }
+
+    const handleUnhover = () => {
+        setHovering(false);
+    }
 
     return (
         <AccordionPanel
@@ -21,6 +38,7 @@ const FavoritesListItem = ({ item, itemId }) => {
                     item={item}
                     handleChangeRating={handleChangeRating}
                     itemId={itemId}
+                    hovering={hovering}
                 />
             }
             fill
@@ -28,6 +46,10 @@ const FavoritesListItem = ({ item, itemId }) => {
             align='center'
             justify='between'
             width='medium'
+            onMouseOver={handleHover}
+            onMouseOut={handleUnhover}
+            onFocus={handleHover}
+            onBlur={handleUnhover}
         >
             <Box direction='row' align='center' justify='between' fill>
                 <Box direction='row'>
@@ -40,7 +62,20 @@ const FavoritesListItem = ({ item, itemId }) => {
                         </Text>
                     ) : null}
                 </Box>
-                <Text>{dayjs.unix(item.created.seconds).format('ddd MMM DD, YYYY hh:mm a')}</Text>
+                <Box direction='row' align='center'>
+                    <Text margin={{ horizontal: "medium" }}>
+                        {dayjs.unix(item.created.seconds).format("ddd MMM DD, YYYY hh:mm a")}
+                    </Text>
+                    <DropButton
+                        icon={<Trash size='small' />}
+                        size='small'
+                        margin={{ horizontal: "12px" }}
+                        dropAlign={{ top: "bottom", right: "right" }}
+                        dropContent={<DeleteDialog handleDelete={handleDelete} />}
+                        dropProps={{ round: "small" }}
+                        disabled={saving}
+                    />
+                </Box>
             </Box>
         </AccordionPanel>
     );

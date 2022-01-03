@@ -152,7 +152,9 @@ export const thunkedSpin = () => (dispatch, getState) => {
     Object.keys(newSelections).forEach((category) => {
         selections[category].forEach((el, index) => {
             if (!el.locked) {
-                newSelections[category][index].result = randomlySelect(state.ideas[category].entries)
+                newSelections[category][index].result = randomlySelect(
+                    state.ideas[category].entries
+                );
             }
         });
     });
@@ -174,14 +176,49 @@ export const thunkedSaveFavorite = () => async (dispatch, getState) => {
                     idea: state.favorites.textField,
                     rating: 0,
                     category1: [state.selections.category1[0].result],
-                    category2: [state.selections.category2[0].result, state.selections.category2[1].result],
+                    category2: [
+                        state.selections.category2[0].result,
+                        state.selections.category2[1].result,
+                    ],
                     created: Timestamp.now(),
                 },
-            }
-            console.log('new', newFavorite)
+            };
+            console.log("new", newFavorite);
             await updateDoc(docRef, newFavorite);
             const updatedDocSnap = await getDoc(docRef);
             dispatch(saveSuccess(updatedDocSnap.data().favorites));
+        }
+    } catch (e) {
+        console.log(e);
+    }
+};
+
+export const thunkedDeleteFavorite = (id) => async (dispatch, getState) => {
+    dispatch(saveStart());
+
+    const state = getState();
+    try {
+        const docRef = doc(db, `users/${state.user.uid}`);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            const { favorites } = docSnap.data();
+            const filteredFavorites = Object.keys(favorites).reduce((acc, cur) => {
+                if (cur !== id) {
+                    acc[cur] = favorites[cur];
+                }
+                return acc;
+            }, {});
+            await updateDoc(docRef, { favorites: filteredFavorites });
+            const updatedDocSnap = await getDoc(docRef);
+            dispatch(saveSuccess(updatedDocSnap.data().favorites));
+
+            //cleanup activeIds in localStorage
+            const activeIds = JSON.parse(window.localStorage.getItem('activeIds'));
+            const idIndex = activeIds.indexOf(id)
+            if (idIndex >= 0) {
+                activeIds.splice(idIndex, 1)
+                window.localStorage.setItem('activeIds', JSON.stringify(activeIds))
+            }
         }
     } catch (e) {
         console.log(e);

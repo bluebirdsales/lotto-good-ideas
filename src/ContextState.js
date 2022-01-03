@@ -58,6 +58,10 @@ const ContextState = () => {
         dispatchReducer(ACTIONS.thunkedChangeRating(id, rating));
     }
 
+    const handleDeleteFavorite = (id) => {
+        dispatchReducer(ACTIONS.thunkedDeleteFavorite(id))
+    }
+
     return (
         <Context.Provider
             value={{
@@ -76,6 +80,7 @@ const ContextState = () => {
                 handleClear: () => handleClear(),
                 handleToggleLock: (category, index) => handleToggleLock(category, index),
                 handleChangeRating: (id, rating) => handleChangeRating(id, rating),
+                handleDeleteFavorite: (id) => handleDeleteFavorite(id),
             }}
         >
             <App />
