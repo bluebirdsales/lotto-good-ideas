@@ -1,7 +1,7 @@
-import { Accordion, Box, Button, Heading } from "grommet";
+import { Accordion, Box, Heading } from "grommet";
 import { IconButton } from "./common/buttons";
-import { Descend, Star } from "grommet-icons";
-import { useContext, useEffect, useState, useMemo, useCallback } from "react";
+import { Ascend, Clock, Descend, Star } from "grommet-icons";
+import { useContext, useEffect, useState, useCallback } from "react";
 import FavoritesListItem from "./FavoritesListItem";
 import Context from "./utils/context";
 
@@ -9,24 +9,27 @@ const FavoritesTab = () => {
     const context = useContext(Context);
     const { activeIds } = context.session;
     const [activePanels, setActivePanels] = useState([]);
+    const [sortBy, setSortBy] = useState({ type: "rating", direction: "descending" });
+    const [sortedFaves, setSortedFaves] = useState([]);
 
     const { savedIdeas } = context.favorites;
 
-    // const sortedFaves = Object.keys(savedIdeas).sort((a, b) => {
-    //     const textA = savedIdeas[a].idea.toLowerCase();
-    //     const textB = savedIdeas[b].idea.toLowerCase();
-    //     return textA < textB ? -1 : textA > textB ? 1 : 0;
-    // });
-
-    const sortedFaves = useMemo(
-        () =>
-            Object.keys(savedIdeas).sort((a, b) => {
-                const ratingA = savedIdeas[a].rating;
-                const ratingB = savedIdeas[b].rating;
-                return ratingB - ratingA;
-            }),
-        [savedIdeas]
-    );
+    const handleToggleSort = (e) => {
+        const { name } = e.currentTarget;
+        setSortBy((prevState) => {
+            if (name === prevState.type) {
+                return {
+                    ...prevState,
+                    direction: prevState.direction === "descending" ? "ascending" : "descending",
+                };
+            } else {
+                return {
+                    type: name,
+                    direction: "descending",
+                };
+            }
+        });
+    };
 
     const handleActivePanels = (array) => {
         //get ids of active indices from sortedFavorites
@@ -38,18 +41,50 @@ const FavoritesTab = () => {
         setActivePanels(getPanelsById(ids));
     };
 
-    const getPanelsById = useCallback((ids) => {
-        const panels = ids.reduce((acc, id) => {
-            const index = sortedFaves.indexOf(id);
-            if (index >= 0) acc.push(index);
-            return acc;
-        }, []);
-        return panels;
-    }, [sortedFaves]);
+    const getPanelsById = useCallback(
+        (ids) => {
+            const panels = ids.reduce((acc, id) => {
+                const index = sortedFaves.indexOf(id);
+                if (index >= 0) acc.push(index);
+                return acc;
+            }, []);
+            return panels;
+        },
+        [sortedFaves]
+    );
 
     useEffect(() => {
-        setActivePanels(getPanelsById(activeIds))
-    }, [activeIds, getPanelsById])
+        setActivePanels(getPanelsById(activeIds));
+    }, [activeIds, getPanelsById]);
+
+    useEffect(() => {
+        const keys = Object.keys(savedIdeas);
+        //return if savedIdeas is one or fewer
+        if (keys.length < 2) return;
+
+        //sort savedIdeas depending on sortBy
+        const sortedSavedIdeas = keys.sort((a, b) => {
+            console.log("sortBy", sortBy);
+            switch (sortBy.type) {
+                case "rating":
+                    const ratingA = savedIdeas[a].rating;
+                    const ratingB = savedIdeas[b].rating;
+                    return sortBy.direction === "descending"
+                        ? ratingB - ratingA
+                        : ratingA - ratingB;
+                case "created":
+                    const timeA = savedIdeas[a].created.seconds;
+                    const timeB = savedIdeas[b].created.seconds;
+                    return sortBy.direction === "descending" ? timeB - timeA : timeA - timeB;
+                default:
+                    return 0;
+            }
+        });
+        setSortedFaves(sortedSavedIdeas);
+    }, [savedIdeas, sortBy]);
+
+    console.log("sortedFaves", sortedFaves);
+    console.log("savedIdeas", savedIdeas);
 
     return (
         <Box
@@ -61,10 +96,46 @@ const FavoritesTab = () => {
                 <Heading level='3'>Favorites</Heading>
                 <Box>
                     <Box direction='row'>
-                        <IconButton size='small'>
+                        <IconButton
+                            size='small'
+                            onClick={handleToggleSort}
+                            name='rating'
+                            backgroundColor={sortBy.type === "rating" && "accent-1"}
+                        >
                             <Box direction='row' align='center' height='24px' width='24px'>
-                                <Star size='small' />
-                                <Descend size='small' />
+                                <Star size='small' color={sortBy.type === "rating" && "dark-1"} />
+                                {sortBy.type === "rating" && sortBy.direction === "ascending" ? (
+                                    <Ascend
+                                        size='small'
+                                        color={sortBy.type === "rating" && "dark-1"}
+                                    />
+                                ) : (
+                                    <Descend
+                                        size='small'
+                                        color={sortBy.type === "rating" && "dark-1"}
+                                    />
+                                )}
+                            </Box>
+                        </IconButton>
+                        <IconButton
+                            size='small'
+                            onClick={handleToggleSort}
+                            name='created'
+                            backgroundColor={sortBy.type === "created" && "accent-1"}
+                        >
+                            <Box direction='row' align='center' height='24px' width='24px'>
+                                <Clock size='small' color={sortBy.type === "created" && "dark-1"} />
+                                {sortBy.type === "created" && sortBy.direction === "ascending" ? (
+                                    <Ascend
+                                        size='small'
+                                        color={sortBy.type === "created" && "dark-1"}
+                                    />
+                                ) : (
+                                    <Descend
+                                        size='small'
+                                        color={sortBy.type === "created" && "dark-1"}
+                                    />
+                                )}
                             </Box>
                         </IconButton>
                     </Box>
@@ -72,13 +143,17 @@ const FavoritesTab = () => {
             </Box>
             <Box>
                 <Accordion multiple activeIndex={activePanels} onActive={handleActivePanels}>
-                    {sortedFaves.map((key) => (
-                        <FavoritesListItem
-                            item={context.favorites.savedIdeas[key]}
-                            itemId={key}
-                            key={`${key}`}
-                        />
-                    ))}
+                    {sortedFaves.map((key) => {
+                        if (context.favorites.savedIdeas[key]) {
+                            return (
+                                <FavoritesListItem
+                                    item={context.favorites.savedIdeas[key]}
+                                    itemId={key}
+                                    key={`${key}`}
+                                />
+                            );
+                        } else return null;
+                    })}
                 </Accordion>
             </Box>
         </Box>

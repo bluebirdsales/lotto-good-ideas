@@ -1,5 +1,5 @@
 import { useContext, useState } from "react";
-import { AccordionPanel, Box, DropButton, Spinner, Text } from "grommet";
+import { AccordionPanel, Box, DropButton, Text } from "grommet";
 
 import Context from "./utils/context";
 import FavoritesAccordionLabel from "./FavoritesAccordionLabel";
