@@ -1,5 +1,5 @@
-import { TextInput, Box, Heading, Button, List, Form } from "grommet";
-import { AddCircle, Lock } from "grommet-icons";
+import { TextInput, Box, Heading, Button, List, Form, Text } from "grommet";
+import { AddCircle, FormView, Hide, Lock } from "grommet-icons";
 import { useState, useContext } from "react";
 import IdeaListItem from "./IdeaListItem";
 import Context from "./utils/context";
@@ -7,10 +7,9 @@ import { IconButton } from "./common/buttons";
 
 const SimpleSlot = ({ category, message }) => {
     const context = useContext(Context);
-    // const [selection, setSelection] = useState("");
     const [value, setValue] = useState("");
-
-    // const { locked } = context.selections[category];
+    const [showList, setShowList] = useState(true);
+    const [hideIcon, setHideIcon] = useState(false);
 
     const handleAdd = async (e) => {
         e.preventDefault();
@@ -33,6 +32,11 @@ const SimpleSlot = ({ category, message }) => {
 
     const handleToggleLock = (index) => {
         context.handleToggleLock(category, index);
+    };
+
+    const handleToggleList = () => {
+        setShowList(!showList);
+        setHideIcon(!hideIcon);
     };
 
     return (
@@ -80,16 +84,28 @@ const SimpleSlot = ({ category, message }) => {
                     />
                 </Box>
             </Form>
-            <List data={context.ideas[category].entries} pad='none'>
-                {(datum, index) => (
-                    <IdeaListItem
-                        item={datum}
-                        key={`${datum}-${index}`}
-                        index={index}
-                        handleDelete={handleDelete}
-                    />
-                )}
-            </List>
+            <Box direction='row' align='center' justify='end' >
+                <IconButton
+                    icon={hideIcon ? <Hide /> : <FormView />}
+                    onClick={handleToggleList}
+                    onMouseOver={() => setHideIcon(showList)}
+                    onMouseOut={() => setHideIcon(!showList)}
+                    onFocus={() => setHideIcon(showList)}
+                    onBlur={() => setHideIcon(!showList)}
+                />
+            </Box>
+            {showList && (
+                <List data={context.ideas[category].entries} pad='none'>
+                    {(datum, index) => (
+                        <IdeaListItem
+                            item={datum}
+                            key={`${datum}-${index}`}
+                            index={index}
+                            handleDelete={handleDelete}
+                        />
+                    )}
+                </List>
+            )}
         </Box>
     );
 };
