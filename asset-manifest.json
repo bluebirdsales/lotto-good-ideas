@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/lotto-good-ideas/static/css/main.e6c13ad2.css",
-    "main.js": "/lotto-good-ideas/static/js/main.d8806879.js",
+    "main.js": "/lotto-good-ideas/static/js/main.cd833df5.js",
     "static/js/787.df049315.chunk.js": "/lotto-good-ideas/static/js/787.df049315.chunk.js",
     "index.html": "/lotto-good-ideas/index.html",
     "main.e6c13ad2.css.map": "/lotto-good-ideas/static/css/main.e6c13ad2.css.map",
-    "main.d8806879.js.map": "/lotto-good-ideas/static/js/main.d8806879.js.map",
+    "main.cd833df5.js.map": "/lotto-good-ideas/static/js/main.cd833df5.js.map",
     "787.df049315.chunk.js.map": "/lotto-good-ideas/static/js/787.df049315.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.e6c13ad2.css",
-    "static/js/main.d8806879.js"
+    "static/js/main.cd833df5.js"
   ]
 }
