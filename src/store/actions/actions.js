@@ -1,6 +1,17 @@
 import * as TYPES from "./types";
 import { signInWithGoogle } from "../../firebase/firebase_config";
-import { getDoc, doc, updateDoc, setDoc, Timestamp } from "firebase/firestore";
+import {
+    collection,
+    getDoc,
+    doc,
+    updateDoc,
+    setDoc,
+    Timestamp,
+    query,
+    where,
+    getDocs,
+    deleteField,
+} from "firebase/firestore";
 import { db } from "../../firebase/firebase_config";
 import { initialState } from "../reducers/reducer";
 import { v4 as uuidv4 } from "uuid";
@@ -15,9 +26,8 @@ export const updateCategory = (category, entries) => ({
 //     payload: number,
 // });
 
-export const signInStart = (user) => ({
-    type: TYPES.SIGNIN_SUCCESS,
-    payload: user,
+export const signInStart = () => ({
+    type: TYPES.SIGNIN_START,
 });
 
 export const signInSuccess = (user) => ({
@@ -32,6 +42,11 @@ export const signOutSuccess = () => ({
 export const setStoredIdeas = (ideas) => ({
     type: TYPES.SET_STORED_IDEAS,
     payload: ideas,
+});
+
+export const setSharedLists = (sharedLists) => ({
+    type: TYPES.SET_SHARED_LISTS,
+    payload: sharedLists,
 });
 
 export const setSelections = (selections) => ({
@@ -76,56 +91,163 @@ export const setActiveIds = (ids) => ({
     payload: ids,
 });
 
+export const setVisibleLists = (visibleLists) => ({
+    type: TYPES.SET_VISIBLE_LISTS,
+    payload: visibleLists,
+});
+
 export const thunkedSignIn = (user) => async (dispatch) => {
-    console.log("user", user);
     dispatch(signInSuccess(user));
 
     try {
-        const docRef = doc(db, `users/${user.uid}`);
-        const docSnap = await getDoc(docRef);
+        const userRef = doc(db, `users/${user.uid}`);
+        const userSnap = await getDoc(userRef);
 
-        if (docSnap.exists()) {
-            const { favorites, state, session } = docSnap.data();
-            dispatch(setStoredIdeas(state.ideas));
+        if (userSnap.exists()) {
+            const { favorites, session } = userSnap.data();
+
+            const ownLists = await getOwnLists(user.uid);
+
+            const sharedLists = await getSharedLists(user.uid);
+
+            dispatch(setStoredIdeas(ownLists));
+            dispatch(setSharedLists(sharedLists));
             dispatch(saveSuccess(favorites));
             dispatch(setSession(session));
         } else {
-            await setDoc(doc(db, "users", user.uid), {
-                email: user.email,
-                state: {
-                    ideas: initialState.ideas,
-                },
-                favorites: initialState.favorites.savedIdeas,
-                session: initialState.session,
+            const listRef = doc(collection(db, "lists"));
+            await setDoc(listRef, {
+                ideas: initialState.ideas.myLists.placeholder,
+                name: "",
+                owner: { uid: user.uid, email: user.email },
+                sharedWith: {},
+                updated: Timestamp.now(),
             });
-            const newDoc = await getDoc(docRef);
-            dispatch(setStoredIdeas(newDoc.data().state.ideas));
+            const listSnap = await getDoc(listRef);
+            if (listSnap.exists()) {
+                await setDoc(doc(db, "users", user.uid), {
+                    email: user.email,
+                    favorites: initialState.favorites.savedIdeas,
+                    session: {
+                        activeIds: [],
+                        visibleLists: {
+                            [listSnap.id]: {
+                                show: true,
+                            },
+                        },
+                    },
+                });
+                const newUser = await getDoc(userRef);
+                dispatch(setVisibleLists(newUser.data().session.visibleLists));
+
+                const ownLists = await getOwnLists(user.uid);
+
+                dispatch(setStoredIdeas(ownLists));
+            }
         }
     } catch (e) {
         console.log(e);
     }
 };
 
+export const thunkedSessionSignIn = (user) => async (dispatch, getState) => {
+    dispatch(signInSuccess(user));
+
+    try {
+        const userRef = doc(db, `users/${user.uid}`);
+        const userSnap = await getDoc(userRef);
+
+        if (userSnap.exists()) {
+            const { favorites, session } = userSnap.data();
+
+            const ownLists = await getOwnLists(user.uid);
+
+            const sharedLists = await getSharedLists(user.uid);
+
+            dispatch(setStoredIdeas(ownLists));
+            dispatch(setSharedLists(sharedLists));
+            dispatch(saveSuccess(favorites));
+            dispatch(setSession(session));
+        }
+    } catch (e) {
+        console.log(e);
+    }
+};
+
+const getOwnLists = async (uid) => {
+    const listsRef = collection(db, `lists`);
+    const own = query(listsRef, where("owner.uid", "==", uid));
+
+    const querySnapshotOwnList = await getDocs(own);
+    if (querySnapshotOwnList.docs[0].exists()) {
+        const listId = querySnapshotOwnList.docs[0].id;
+        const { ideas, sharedWith } = querySnapshotOwnList.docs[0].data();
+        const { category1, category2 } = ideas;
+
+        return {
+            [listId]: {
+                sharedWith,
+                category1,
+                category2,
+            },
+        };
+    }
+    return initialState.ideas.myLists.placeholder;
+};
+
+const getSharedLists = async (uid) => {
+    const listsRef = collection(db, `lists`);
+
+    const shared = query(listsRef, where(`sharedWith.${uid}`, "!=", false));
+    const querySnapshotShared = await getDocs(shared);
+    const sharedLists = {};
+
+    querySnapshotShared.forEach((doc) => {
+        const { owner, ideas, sharedWith } = doc.data();
+        const { category1, category2 } = ideas;
+        const { accepted, level } = sharedWith[uid];
+        sharedLists[doc.id] = {
+            category1,
+            category2,
+            owner: owner.email,
+            accepted,
+            level,
+        };
+    });
+    return sharedLists;
+};
+
 export const googleSignIn = () => async (dispatch) => {
-    const user = await signInWithGoogle();
-    dispatch(thunkedSignIn(user));
+    try {
+        const user = await signInWithGoogle();
+        dispatch(signInStart());
+        dispatch(thunkedSignIn(user));
+    } catch (e) {
+        console.log(e);
+        dispatch(signOutSuccess());
+    }
 };
 
 export const thunkedAddIdea = (category, value) => async (dispatch, getState) => {
     const state = getState();
 
-    if (state.ideas[category].entries.includes(value)) return; //TODO show warning message
+    // if (state.ideas.myLists[???][category].entries.includes(value)) return; // block repeat entries?
 
     try {
-        const docRef = doc(db, `users/${state.user.uid}`);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-            const { entries } = docSnap.data().state.ideas[category];
+        const listsRef = collection(db, `lists`);
+        const q = query(listsRef, where("owner.uid", "==", state.user.uid));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.docs[0].exists()) {
+            const { entries } = querySnapshot.docs[0].data().ideas[category];
             entries.push(value);
-            await updateDoc(docRef, {
-                [`state.ideas.${category}.entries`]: entries,
+
+            await updateDoc(querySnapshot.docs[0].ref, {
+                [`ideas.${category}.entries`]: entries,
             });
-            dispatch(updateCategory(category, entries));
+
+            const ownLists = await getOwnLists(state.user.uid);
+            dispatch(setStoredIdeas(ownLists));
         }
     } catch (e) {
         console.log(e);
@@ -133,18 +255,22 @@ export const thunkedAddIdea = (category, value) => async (dispatch, getState) =>
 };
 
 export const thunkedDeleteIdea = (category, index) => async (dispatch, getState) => {
-    const state = getState();
+    const { user } = getState();
     try {
-        const docRef = doc(db, `users/${state.user.uid}`);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-            const { entries } = docSnap.data().state.ideas[category];
+        const listsRef = collection(db, `lists`);
+        const q = query(listsRef, where("owner.uid", "==", user.uid));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.docs[0].exists()) {
+            const { entries } = querySnapshot.docs[0].data().ideas[category];
             const clonedEntries = [...entries];
             clonedEntries.splice(index, 1);
-            await updateDoc(docRef, {
-                [`state.ideas.${category}.entries`]: clonedEntries,
+            await updateDoc(querySnapshot.docs[0].ref, {
+                [`ideas.${category}.entries`]: clonedEntries,
             });
-            dispatch(updateCategory(category, clonedEntries));
+
+            const ownLists = await getOwnLists(user.uid);
+            dispatch(setStoredIdeas(ownLists));
         }
     } catch (e) {
         console.log(e);
@@ -166,9 +292,26 @@ export const thunkedSpin = () => (dispatch, getState) => {
     Object.keys(newSelections).forEach((category) => {
         selections[category].forEach((el, index) => {
             if (!el.locked) {
-                newSelections[category][index].result = randomlySelect(
-                    state.ideas[category].entries
-                );
+                let compiledList = [];
+
+                for (let key in state.ideas.myLists) {
+                    if (state.session.visibleLists?.[key]?.show) {
+                        compiledList = [...state.ideas.myLists[key][category].entries];
+                    }
+                }
+                for (let key in state.ideas.sharedLists) {
+                    if (
+                        state.ideas.sharedLists?.[key]?.accepted &&
+                        state.session.visibleLists?.[key]?.show
+                    ) {
+                        compiledList = [
+                            ...compiledList,
+                            ...state.ideas.sharedLists[key][category].entries,
+                        ];
+                    }
+                }
+
+                newSelections[category][index].result = randomlySelect(compiledList);
             }
         });
     });
@@ -187,8 +330,8 @@ export const thunkedSetActiveIds = (ids) => async (dispatch, getState) => {
 
         if (docSnap.exists()) {
             const activeIds = {
-                "session.activeIds": ids
-            }
+                "session.activeIds": ids,
+            };
             await updateDoc(docRef, activeIds);
         }
     } catch (e) {
@@ -279,6 +422,147 @@ export const thunkedChangeRating = (id, newRating) => async (dispatch, getState)
             });
             const updatedDocSnap = await getDoc(docRef);
             dispatch(saveSuccess(updatedDocSnap.data().favorites));
+        }
+    } catch (e) {
+        console.log(e);
+    }
+};
+
+export const thunkedAcceptList = (id) => async (dispatch, getState) => {
+    const { user } = getState();
+    try {
+        const docRef = doc(db, `lists/${id}`);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            await updateDoc(docRef, {
+                [`sharedWith.${user.uid}.accepted`]: true,
+            });
+            const userRef = doc(db, `users/${user.uid}`);
+            const userSnap = await getDoc(userRef);
+
+            if (userSnap.exists()) {
+                await updateDoc(userRef, {
+                    [`session.visibleLists.${id}`]: {
+                        show: true,
+                    },
+                });
+
+                const newSnap = await getDoc(userRef);
+                if (newSnap.exists()) {
+                    const { visibleLists } = newSnap.data().session;
+                    dispatch(setVisibleLists(visibleLists));
+
+                    const sharedLists = await getSharedLists(user.uid);
+                    dispatch(setSharedLists(sharedLists));
+                }
+            }
+        }
+    } catch (e) {
+        console.log(e);
+    }
+};
+
+export const thunkedRejectList = (id) => async (dispatch, getState) => {
+    const { user } = getState();
+    try {
+        const docRef = doc(db, `lists/${id}`);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            await updateDoc(docRef, {
+                [`sharedWith.${user.uid}`]: deleteField(),
+            });
+
+            const sharedLists = await getSharedLists(user.uid);
+            dispatch(setSharedLists(sharedLists));
+        }
+    } catch (e) {
+        console.log(e);
+    }
+};
+
+export const thunkedShareList = (email, listId) => async (dispatch, getState) => {
+    const { user } = getState();
+    if (email === user.email) return;
+    try {
+        const usersRef = collection(db, `users`);
+        const q = query(usersRef, where("email", "==", email));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.docs[0].exists()) {
+            const docRef = doc(db, `lists/${listId}`);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                await updateDoc(docRef, {
+                    [`sharedWith.${querySnapshot.docs[0].id}`]: {
+                        email,
+                        accepted: false,
+                        level: "view",
+                    },
+                });
+                const ownLists = await getOwnLists(user.uid);
+                dispatch(setStoredIdeas(ownLists));
+            }
+        }
+    } catch (e) {
+        console.log(e);
+    }
+};
+
+export const thunkedUnshareList = (email, listId) => async (dispatch, getState) => {
+    const { user } = getState();
+    try {
+        const usersRef = collection(db, `users`);
+        const q = query(usersRef, where("email", "==", email));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.docs[0].exists()) {
+            const docRef = doc(db, `lists/${listId}`);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                await updateDoc(docRef, {
+                    [`sharedWith.${querySnapshot.docs[0].id}`]: deleteField(),
+                });
+
+                const userRef = doc(db, `users/${querySnapshot.docs[0].id}`);
+                const userSnap = await getDoc(userRef);
+
+                if (userSnap.exists()) {
+                    await updateDoc(userRef, {
+                        [`session.visibleLists.${listId}`]: deleteField(),
+                    });
+                }
+
+                const ownLists = await getOwnLists(user.uid);
+
+                dispatch(setStoredIdeas(ownLists));
+            }
+        }
+    } catch (e) {
+        console.log(e);
+    }
+};
+
+export const thunkedToggleVisibleList = (listId) => async (dispatch, getState) => {
+    const { user } = getState();
+    try {
+        const docRef = doc(db, `users/${user.uid}`);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            const { show } = docSnap.data().session.visibleLists[listId];
+            await updateDoc(docRef, {
+                [`session.visibleLists.${listId}.show`]: !show,
+            });
+
+            const newSnap = await getDoc(docRef);
+            if (newSnap.exists()) {
+                const { visibleLists } = newSnap.data().session;
+                dispatch(setVisibleLists(visibleLists));
+            }
         }
     } catch (e) {
         console.log(e);

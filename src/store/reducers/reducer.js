@@ -2,14 +2,19 @@ import * as TYPES from "../actions/types";
 
 export const initialState = {
     ideas: {
-        category1: {
-            name: "",
-            entries: ["your ideas here..."],
+        myLists: {
+            placeholder: {
+                category1: {
+                    name: "",
+                    entries: ["your ideas here..."],
+                },
+                category2: {
+                    name: "",
+                    entries: ["your ideas here..."],
+                },
+            },
         },
-        category2: {
-            name: "",
-            entries: ["your ideas here..."],
-        },
+        sharedLists: {},
     },
     selections: {
         category1: [{ locked: false, result: "" }],
@@ -37,6 +42,8 @@ export const initialState = {
     },
     session: {
         activeIds: [],
+        visibleLists: {},
+        fetching: false,
     },
     user: null,
 };
@@ -57,17 +64,40 @@ export const Reducer = (state = initialState, action) => {
         case TYPES.SET_STORED_IDEAS:
             return {
                 ...state,
-                ideas: action.payload,
+                ideas: {
+                    ...state.ideas,
+                    myLists: action.payload,
+                },
+            };
+        case TYPES.SET_SHARED_LISTS:
+            return {
+                ...state,
+                ideas: {
+                    ...state.ideas,
+                    sharedLists: action.payload,
+                },
             };
         case TYPES.SET_SELECTIONS:
             return {
                 ...state,
                 selections: action.payload,
             };
+        case TYPES.SIGNIN_START:
+            return {
+                ...state,
+                session: {
+                    ...state.session,
+                    fetching: true,
+                },
+            };
         case TYPES.SIGNIN_SUCCESS:
             return {
                 ...state,
                 user: action.payload,
+                session: {
+                    ...state.session,
+                    fetching: false,
+                },
             };
         case TYPES.SIGNOUT_SUCCESS:
             return {
@@ -140,6 +170,14 @@ export const Reducer = (state = initialState, action) => {
                 session: {
                     ...state.session,
                     activeIds: action.payload,
+                },
+            };
+        case TYPES.SET_VISIBLE_LISTS:
+            return {
+                ...state,
+                session: {
+                    ...state.session,
+                    visibleLists: action.payload,
                 },
             };
         default:

@@ -1,6 +1,6 @@
-import { TextInput, Box, Heading, Button, List, Form, Text } from "grommet";
+import { TextInput, Box, Heading, Button, List, Form } from "grommet";
 import { AddCircle, FormView, Hide, Lock } from "grommet-icons";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect, useCallback } from "react";
 import IdeaListItem from "./IdeaListItem";
 import Context from "./utils/context";
 import { IconButton } from "./common/buttons";
@@ -10,6 +10,7 @@ const SimpleSlot = ({ category, message }) => {
     const [value, setValue] = useState("");
     const [showList, setShowList] = useState(true);
     const [hideIcon, setHideIcon] = useState(false);
+    const [compiledLists, setCompiledLists] = useState([]);
 
     const handleAdd = async (e) => {
         e.preventDefault();
@@ -38,6 +39,44 @@ const SimpleSlot = ({ category, message }) => {
         setShowList(!showList);
         setHideIcon(!hideIcon);
     };
+
+    const getEntries = useCallback(() => {
+        let compiledList = [];
+
+        const { myLists, sharedLists } = context.ideas;
+
+        for (let key in myLists) {
+            if (context.session.visibleLists?.[key]?.show) {
+                const ideaList = myLists[key][category].entries.map((item) => ({
+                    idea: item,
+                    owned: true,
+                    owner: context.user.email,
+                }));
+                compiledList = [...ideaList];
+
+                // compiledList = [...context.ideas.myLists[key][category].entries]
+            }
+        }
+        for (let key in sharedLists) {
+            if (
+                sharedLists?.[key]?.accepted &&
+                context.session.visibleLists?.[key]?.show
+            ) {
+                const ideaList = sharedLists[key][category].entries.map((item) => ({
+                    idea: item,
+                    owned: false,
+                    owner: sharedLists[key].owner
+                }));
+                compiledList = [...compiledList, ...ideaList];
+                // compiledList = [...compiledList, ...context.ideas.sharedLists[key][category].entries]
+            }
+        }
+        return compiledList;
+    }, [category, context.ideas, context.session.visibleLists, context.user.email]);
+
+    useEffect(() => {
+        setCompiledLists(getEntries());
+    }, [getEntries]);
 
     return (
         <Box margin={{ horizontal: "small" }}>
@@ -84,7 +123,7 @@ const SimpleSlot = ({ category, message }) => {
                     />
                 </Box>
             </Form>
-            <Box direction='row' align='center' justify='end' >
+            <Box direction='row' align='center' justify='end'>
                 <IconButton
                     icon={hideIcon ? <Hide /> : <FormView />}
                     onClick={handleToggleList}
@@ -95,7 +134,7 @@ const SimpleSlot = ({ category, message }) => {
                 />
             </Box>
             {showList && (
-                <List data={context.ideas[category].entries} pad='none'>
+                <List data={compiledLists} pad='none'>
                     {(datum, index) => (
                         <IdeaListItem
                             item={datum}

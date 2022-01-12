@@ -22,9 +22,13 @@ const ContextState = () => {
         dispatchReducer(ACTIONS.thunkedDeleteIdea(cat, index));
     };
 
-    const handleSignIn = (user) => {
-        dispatchReducer(ACTIONS.thunkedSignIn(user));
-    };
+    const handleSignInStart = () => {
+        dispatchReducer(ACTIONS.signInStart());
+    }
+
+    const handleSignedInSession = (user) => {
+        dispatchReducer(ACTIONS.thunkedSessionSignIn(user))
+    }
 
     const handleSignOutSuccess = () => {
         dispatchReducer(ACTIONS.signOutSuccess());
@@ -66,6 +70,26 @@ const ContextState = () => {
         dispatchReducer(ACTIONS.thunkedSetActiveIds(ids));
     };
 
+    const handleAcceptList = (id) => {
+        dispatchReducer(ACTIONS.thunkedAcceptList(id));
+    };
+
+    const handleRejectList = (id) => {
+        dispatchReducer(ACTIONS.thunkedRejectList(id));
+    };
+
+    const handleShareList = (email, listId) => {
+        dispatchReducer(ACTIONS.thunkedShareList(email, listId));
+    };
+
+    const handleUnshareList = (email, listId) => {
+        dispatchReducer(ACTIONS.thunkedUnshareList(email, listId));
+    };
+
+    const handleToggleView = (id) => {
+        dispatchReducer(ACTIONS.thunkedToggleVisibleList(id));
+    };
+
     return (
         <Context.Provider
             value={{
@@ -76,7 +100,8 @@ const ContextState = () => {
                 session: stateReducer.session,
                 handleAddIdea: (cat, val) => handleAddIdea(cat, val),
                 handleDeleteIdea: (cat, index) => handleDeleteIdea(cat, index),
-                handleSignIn: (user) => handleSignIn(user),
+                handleSignInStart: () => handleSignInStart(),
+                handleSignedInSession: (user) => handleSignedInSession(user),
                 handleSignOutSuccess: () => handleSignOutSuccess(),
                 googleSignIn: () => handleGoogleSignIn(),
                 handleSpin: () => handleSpin(),
@@ -87,6 +112,11 @@ const ContextState = () => {
                 handleChangeRating: (id, rating) => handleChangeRating(id, rating),
                 handleDeleteFavorite: (id) => handleDeleteFavorite(id),
                 handleSetActiveIds: (ids) => handleSetActiveIds(ids),
+                handleAcceptList: (id) => handleAcceptList(id),
+                handleRejectList: (id) => handleRejectList(id),
+                handleShareList: (email, listId) => handleShareList(email, listId),
+                handleUnshareList: (email, listId) => handleUnshareList(email, listId),
+                handleToggleView: (id) => handleToggleView(id),
             }}
         >
             <App />

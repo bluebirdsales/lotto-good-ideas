@@ -64,7 +64,6 @@ const FavoritesTab = () => {
 
         //sort savedIdeas depending on sortBy
         const sortedSavedIdeas = keys.sort((a, b) => {
-            console.log("sortBy", sortBy);
             switch (sortBy.type) {
                 case "rating":
                     const ratingA = savedIdeas[a].rating;
@@ -82,9 +81,6 @@ const FavoritesTab = () => {
         });
         setSortedFaves(sortedSavedIdeas);
     }, [savedIdeas, sortBy]);
-
-    console.log("sortedFaves", sortedFaves);
-    console.log("savedIdeas", savedIdeas);
 
     return (
         <Box
